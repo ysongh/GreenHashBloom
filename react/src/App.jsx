@@ -1,12 +1,20 @@
-import TreeMap from "./pages/TreeMap"
+import { HashRouter, Route, Routes } from "react-router-dom";
+
+import TreeMap from "./pages/TreeMap";
 
 function App() {
 
   return (
-    <>
-      <h1>Green Hash Bloom</h1>
-      <TreeMap />
-    </>
+    <HashRouter>
+      <Routes>
+        <Route
+          path="/map"
+          element={<TreeMap />} />
+        <Route
+          path="/"
+          element={<>Test</>} />
+      </Routes>
+    </HashRouter>
   )
 }
 
