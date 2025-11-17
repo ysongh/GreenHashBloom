@@ -21,3 +21,6 @@
 
 pnpm-lock.yaml
 .env
+
+# Hardhat Ignition default folder for deployments
+ignition/deployments/chain-296
