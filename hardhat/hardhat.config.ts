@@ -40,4 +40,8 @@ export default defineConfig({
       accounts: [configVariable("HEDERA_PRIVATE_KEY")],
     },
   },
+  paths: {
+    artifacts: '../react/src/artifacts',
+    cache: '../react/src/cache',
+  }
 });
