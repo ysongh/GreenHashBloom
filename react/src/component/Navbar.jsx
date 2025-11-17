@@ -1,24 +1,24 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Avatar, Button, Typography, Dropdown } from 'antd';
-import { UserOutlined, LogoutOutlined, SettingOutlined, WalletOutlined  } from '@ant-design/icons';
+import { Avatar, Button, Typography, Dropdown, Tag } from 'antd';
+import { UserOutlined, LogoutOutlined, SettingOutlined, WalletOutlined } from '@ant-design/icons';
 import { TreeDeciduous } from 'lucide-react';
+import { useConnect, useAccount, useDisconnect, useSwitchChain } from "wagmi";
 
 const { Text } = Typography;
 
 const Navbar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userAddress, setUserAddress] = useState('');
+  const { connect, connectors } = useConnect();
+  const { address, isConnected, chain } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { switchChain } = useSwitchChain();
 
-  const handleConnect = () => {
-    // Simulate wallet connection
-    setIsLoggedIn(true);
-    setUserAddress('0x742d...5f3a');
+  // Format address for display
+  const formatAddress = (addr) => {
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
-  const handleDisconnect = () => {
-    setIsLoggedIn(false);
-    setUserAddress('');
+  const handleSwitchToHedera = () => {
+    switchChain({ chainId: 296 }); // Hedera Testnet
   };
 
   const menuItems = [
@@ -33,6 +33,25 @@ const Navbar = () => {
       label: 'My Wallet',
     },
     {
+      key: 'network',
+      label: (
+        <div>
+          <div className="text-xs text-gray-500 mb-1">Current Network</div>
+          <div className="font-medium">{chain?.name || 'Unknown'}</div>
+          {chain?.id !== 296 && (
+            <Button 
+              size="small" 
+              type="link" 
+              onClick={handleSwitchToHedera}
+              className="p-0 h-auto mt-1"
+            >
+              Switch to Hedera Testnet
+            </Button>
+          )}
+        </div>
+      ),
+    },
+    {
       key: 'settings',
       icon: <SettingOutlined />,
       label: 'Settings',
@@ -45,7 +64,7 @@ const Navbar = () => {
       icon: <LogoutOutlined />,
       label: 'Disconnect',
       danger: true,
-      onClick: handleDisconnect,
+      onClick: () => disconnect(),
     },
   ];
 
@@ -71,7 +90,7 @@ const Navbar = () => {
               Home
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-500 transition-all group-hover:w-full"></span>
             </Link>
-             <Link 
+            <Link 
               to="/treeshop" 
               className="text-gray-700 text-base font-medium no-underline transition-all hover:text-green-600 relative group"
             >
@@ -89,7 +108,7 @@ const Navbar = () => {
         </div>
         
         {/* User Section */}
-        {isLoggedIn ? (
+        {isConnected && address ? (
           <Dropdown 
             menu={{ items: menuItems }} 
             trigger={['click']}
@@ -97,8 +116,13 @@ const Navbar = () => {
           >
             <div className="flex items-center gap-3 cursor-pointer px-4 py-2 rounded-lg hover:bg-gray-50 transition-all">
               <div className="flex flex-col items-end">
-                <Text className="font-semibold text-sm text-gray-800">My Account</Text>
-                <Text className="text-xs text-gray-500 font-mono">{userAddress}</Text>
+                <div className="flex items-center gap-2">
+                  <Text className="font-semibold text-sm text-gray-800">My Account</Text>
+                  {chain?.testnet && (
+                    <Tag color="orange" className="text-xs m-0">Testnet</Tag>
+                  )}
+                </div>
+                <Text className="text-xs text-gray-500 font-mono">{formatAddress(address)}</Text>
               </div>
               <Avatar 
                 size={40} 
@@ -108,15 +132,18 @@ const Navbar = () => {
             </div>
           </Dropdown>
         ) : (
-          <div className="flex flex-col items-end gap-1">
-            <Button 
-              type="primary"
-              icon={<WalletOutlined />}
-              onClick={handleConnect}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 border-none hover:from-green-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all h-9 font-semibold"
-            >
-              Connect Wallet
-            </Button>
+          <div className="flex flex-col gap-2">
+            {connectors.map((connector) => (
+              <Button 
+                key={connector.id}
+                type="primary"
+                icon={<WalletOutlined />}
+                onClick={() => connect({ connector })}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 border-none hover:from-green-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all h-9 font-semibold"
+              >
+                Connect with {connector.name}
+              </Button>
+            ))}
           </div>
         )}
       </div>

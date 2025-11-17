@@ -5,7 +5,6 @@ import TreeMap from "./pages/TreeMap";
 import TreeShop from "./pages/TreeShop";
 
 function App() {
-
   return (
     <HashRouter>
       <Navbar />
