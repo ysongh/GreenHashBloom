@@ -38,8 +38,8 @@ contract TreeShop is ERC721, Ownable {
     }
     
     // Tree prices (in wei)
-    uint256 public constant RED_OAK_PRICE = 20 ether;
-    uint256 public constant MAPLE_PRICE = 22 ether;
+    uint256 public constant RED_OAK_PRICE = 1000000000000000000 ;
+    uint256 public constant MAPLE_PRICE = 2000000000000000000;
     
     // Tree properties
     uint256 public constant RED_OAK_CO2_RATE = 250000000000000000; // 0.25 ton/year
@@ -69,7 +69,7 @@ contract TreeShop is ERC721, Ownable {
      */
     function purchaseTree(TreeType treeType) external payable {
         uint256 price = treeType == TreeType.RedOak ? RED_OAK_PRICE : MAPLE_PRICE;
-        require(msg.value >= price, "Insufficient payment");
+        // require(msg.value >= price, "Insufficient payment");
         
         _treeIdCounter++;
         uint256 newTreeId = _treeIdCounter;

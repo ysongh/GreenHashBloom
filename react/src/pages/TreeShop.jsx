@@ -22,7 +22,7 @@ const TreeShop = () => {
     redOak: {
       name: 'Red Oak',
       key: 0,
-      price: "50",
+      price: "1",
       age: 'Under 1 year old',
       harvestTime: '60 years',
       co2: '0.25 ton/year',
@@ -32,7 +32,7 @@ const TreeShop = () => {
     maple: {
       name: 'Maple',
       key: 1,
-      price: "22",
+      price: "2",
       age: 'Under 1 year old',
       harvestTime: '70 years',
       co2: '0.35 ton/year',
