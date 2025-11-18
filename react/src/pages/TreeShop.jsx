@@ -2,10 +2,17 @@ import React, { useState } from 'react';
 import { Card, Button, InputNumber, Typography, Space, Divider, Row, Col, Badge, Tag } from 'antd';
 import { ShoppingCartOutlined, MinusOutlined, PlusOutlined, ClockCircleOutlined, CloudOutlined } from '@ant-design/icons';
 import { Leaf, Sprout } from 'lucide-react';
+import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { parseEther } from 'viem';
+
+import GreenHashBloomABI from '../artifacts/contracts/TreeShop.sol/TreeShop.json';
+import { CONTRACT_ADDRESS } from '../config';
 
 const { Title, Text } = Typography;
 
 const TreeShop = () => {
+  const { isConnected } = useAccount();
+
   const [basket, setBasket] = useState({
     redOak: 1,
     maple: 2
@@ -14,7 +21,8 @@ const TreeShop = () => {
   const trees = {
     redOak: {
       name: 'Red Oak',
-      price: 20,
+      key: 'RedOak',
+      price: "20",
       age: 'Under 1 year old',
       harvestTime: '60 years',
       co2: '0.25 ton/year',
@@ -23,7 +31,8 @@ const TreeShop = () => {
     },
     maple: {
       name: 'Maple',
-      price: 22,
+      key: 'Maple',
+      price: "22",
       age: 'Under 1 year old',
       harvestTime: '70 years',
       co2: '0.35 ton/year',
@@ -31,6 +40,13 @@ const TreeShop = () => {
       image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop'
     }
   };
+
+  const { 
+    data: hash, 
+    writeContract, 
+    isPending,
+    error 
+  } = useWriteContract();
 
   const updateQuantity = (tree, value) => {
     if (value >= 0) {
@@ -40,6 +56,24 @@ const TreeShop = () => {
 
   const calculateTotal = () => {
     return basket.redOak * trees.redOak.price + basket.maple * trees.maple.price;
+  };
+
+  const handlePurchase = async (treeData) => {
+    if (!isConnected) {
+      return;
+    }
+
+    try {
+      writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: GreenHashBloomABI.abi,
+        functionName: 'purchaseTree',
+        args: [treeData.key],
+        value: parseEther(treeData.price),
+      });
+    } catch (err) {
+      console.error('Purchase error:', err);
+    }
   };
 
   const TreeCard = ({ treeKey, treeData }) => (
@@ -145,7 +179,7 @@ const TreeShop = () => {
       </div>
 
       <Space.Compact style={{ width: '100%' }}>
-        <Button 
+        {/* <Button 
           icon={<MinusOutlined />} 
           onClick={() => updateQuantity(treeKey, basket[treeKey] - 1)}
           size="large"
@@ -163,8 +197,9 @@ const TreeShop = () => {
           icon={<PlusOutlined />} 
           onClick={() => updateQuantity(treeKey, basket[treeKey] + 1)}
           size="large"
-        />
+        /> */}
         <Button 
+          onClick={() => handlePurchase(treeData)}
           type="primary" 
           size="large"
           style={{ 
@@ -178,7 +213,7 @@ const TreeShop = () => {
           }}
           icon={<ShoppingCartOutlined />}
         >
-          ADD TO CART
+          PURCHASE
         </Button>
       </Space.Compact>
     </Card>
@@ -238,7 +273,7 @@ const TreeShop = () => {
           </Row>
         </Col>
 
-        <Col xs={24} lg={8}>
+        {/* <Col xs={24} lg={8}>
           <Card 
             title={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -407,7 +442,7 @@ const TreeShop = () => {
               )}
             </Space>
           </Card>
-        </Col>
+        </Col> */}
       </Row>
     </div>
   );
