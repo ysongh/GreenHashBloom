@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Button, InputNumber, Typography, Space, Divider, Row, Col, Badge, Tag } from 'antd';
+import { Card, Button, InputNumber, Typography, Space, Divider, Row, Col, Badge, Tag, message } from 'antd';
 import { ShoppingCartOutlined, MinusOutlined, PlusOutlined, ClockCircleOutlined, CloudOutlined } from '@ant-design/icons';
 import { Leaf, Sprout } from 'lucide-react';
 import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
@@ -21,7 +21,7 @@ const TreeShop = () => {
   const trees = {
     redOak: {
       name: 'Red Oak',
-      key: 'RedOak',
+      key: 1,
       price: "20",
       age: 'Under 1 year old',
       harvestTime: '60 years',
@@ -259,6 +259,7 @@ const TreeShop = () => {
         <Text style={{ fontSize: 16, color: '#666' }}>
           Choose premium trees and make a positive environmental impact
         </Text>
+        <button onClick={() => handlePurchase(trees.redOak)}>test</button>
       </div>
 
       <Row gutter={[24, 24]}>

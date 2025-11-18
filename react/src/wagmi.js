@@ -1,8 +1,8 @@
-import { http, createConfig } from "wagmi";
-import { walletConnect, injected } from "@wagmi/connectors";
+import { cookieStorage, createStorage } from 'wagmi';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 
 // Hedera Testnet chain config
-const hederaTestnet = {
+export const hederaTestnet = {
   id: 296, // 0x128 in hex
   name: 'Hedera Testnet',
   network: 'hedera-testnet',
@@ -23,22 +23,13 @@ const hederaTestnet = {
 
 const projectId = "YOUR_WALLETCONNECT_PROJECT_ID"; // Get from https://cloud.walletconnect.com
 
-export const config = createConfig({
-  chains: [hederaTestnet],
-  connectors: [
-    walletConnect({
-      projectId,
-      metadata: {
-        name: "Your App Name",
-        description: "Your App Description",
-        url: "https://your-app-url.com",
-        icons: ["https://your-app-url.com/icon.png"],
-      },
-      showQrModal: true,
-    }),
-    injected(), // For browser wallets like MetaMask, HashPack
-  ],
-  transports: {
-    [hederaTestnet.id]: http(),
-  },
-});
+export const wagmiAdapter = new WagmiAdapter({
+  storage: createStorage({
+    storage: cookieStorage
+  }),
+  ssr: false,
+  projectId,
+  networks: [hederaTestnet]
+})
+
+export const config = wagmiAdapter.wagmiConfig;

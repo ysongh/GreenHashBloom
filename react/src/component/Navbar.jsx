@@ -2,12 +2,11 @@ import { Link } from 'react-router-dom';
 import { Avatar, Button, Typography, Dropdown, Tag } from 'antd';
 import { UserOutlined, LogoutOutlined, SettingOutlined, WalletOutlined } from '@ant-design/icons';
 import { TreeDeciduous } from 'lucide-react';
-import { useConnect, useAccount, useDisconnect, useSwitchChain } from "wagmi";
+import { useAccount, useDisconnect, useSwitchChain } from "wagmi";
 
 const { Text } = Typography;
 
 const Navbar = () => {
-  const { connect, connectors } = useConnect();
   const { address, isConnected, chain } = useAccount();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
@@ -133,17 +132,7 @@ const Navbar = () => {
           </Dropdown>
         ) : (
           <div className="flex flex-col gap-2">
-            {connectors.map((connector) => (
-              <Button 
-                key={connector.id}
-                type="primary"
-                icon={<WalletOutlined />}
-                onClick={() => connect({ connector })}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 border-none hover:from-green-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all h-9 font-semibold"
-              >
-                Connect with {connector.name}
-              </Button>
-            ))}
+            <appkit-button />
           </div>
         )}
       </div>
