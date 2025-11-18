@@ -1,11 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import { Card, Table, Avatar, Typography, Row, Col, Tag } from 'antd';
+import { Card, Table, Typography, Tag, Spin, Empty } from 'antd';
 import { TreeDeciduous, Leaf } from 'lucide-react';
+import { useAccount, useReadContract } from 'wagmi';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
+import GreenHashBloomABI from '../artifacts/contracts/TreeShop.sol/TreeShop.json';
+import { CONTRACT_ADDRESS } from '../config';
+
 const { Title, Text } = Typography;
+
+const getTreeName = (treeType) => {
+  return treeType === 0 ? 'Red Oak' : 'Maple';
+};
+
+const getTreeIcon = (treeType) => {
+  return treeType === 0 ? '🍂' : '🍁';
+};
 
 // Fix for default marker icon issue in React Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -33,54 +45,89 @@ function LocationMarker() {
 }
 
 export default function TreeMap() {
-  // Default center: New York City
+  const { address, isConnected } = useAccount();
   const [center] = useState([40.7128, -74.0060]);
   const [zoom] = useState(13);
+  const [forestData, setForestData] = useState([]);
+  const [isLoadingTrees, setIsLoadingTrees] = useState(false);
 
-  // Sample markers
+  // Get user's tree IDs
+  const { data: treeIds, isLoading: isLoadingIds, refetch } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: GreenHashBloomABI.abi,
+    functionName: 'getUserTrees',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && isConnected,
+    }
+  });
+
+  console.log(treeIds)
+
+  // Fetch details for all trees
+  useEffect(() => {
+    
+    const fetchTreeDetails = async () => {
+      if (!treeIds || treeIds.length === 0) {
+        setForestData([]);
+        return;
+      }
+
+      setIsLoadingTrees(true);
+      const trees = [];
+
+      try {
+        // Fetch details for each tree
+        for (const treeId of treeIds) {
+          const response = await fetch('/api/read-contract', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              address: CONTRACT_ADDRESS,
+              abi: GreenHashBloomABI.abi,
+              functionName: 'getTreeDetails',
+              args: [treeId]
+            })
+          });
+
+          if (response.ok) {
+            const details = await response.json();
+            const [treeType, age, co2AbsorptionRate, harvestTime, grassGrowth] = details;
+            
+            trees.push({
+              key: treeId.toString(),
+              treeName: getTreeName(Number(treeType)),
+              treeId: Number(treeId),
+              age: Number(age),
+              co2Absorption: `${Number(co2AbsorptionRate) / 1000} ton/year`,
+              icon: getTreeIcon(Number(treeType)),
+              harvestTime: Number(harvestTime),
+              grassGrowth: Number(grassGrowth),
+            });
+          }
+        }
+
+        setForestData(trees);
+      } catch (error) {
+        console.error('Error fetching tree details:', error);
+      } finally {
+        setIsLoadingTrees(false);
+      }
+    };
+
+    fetchTreeDetails();
+  }, [treeIds]);
+
+  // Sample markers (you can make these dynamic based on tree locations if you add location data to your contract)
   const markers = [
     { id: 1, position: [40.7589, -73.9851], popup: "Times Square" },
     { id: 2, position: [40.7484, -73.9857], popup: "Empire State Building" },
     { id: 3, position: [40.7614, -73.9776], popup: "Central Park" },
   ];
 
-  // My Forest Data
-  const forestData = [
-    {
-      key: '1',
-      treeName: 'Red Oak',
-      treeId: 2,
-      age: 1,
-      co2Absorption: '0.25 ton/year',
-      icon: '🍂'
-    },
-    {
-      key: '2',
-      treeName: 'Red Oak',
-      treeId: 3,
-      age: 1,
-      co2Absorption: '0.25 ton/year',
-      icon: '🍂'
-    },
-    {
-      key: '3',
-      treeName: 'Maple',
-      treeId: 5,
-      age: 1,
-      co2Absorption: '0.35 ton/year',
-      icon: '🍁'
-    },
-  ];
-
-  // Carbon Credit NFT Data
+  // Carbon Credit NFT Data (placeholder - implement based on your contract)
   const nftData = [
-    {
-      key: '1',
-      id: 10,
-      treeId: 2,
-      co2Credit: '0.25 ton/year',
-      year: 2021,
-    },
+    // Add your NFT data here when you implement the carbon credit minting
   ];
 
   const forestColumns = [
@@ -108,6 +155,7 @@ export default function TreeMap() {
       dataIndex: 'age',
       key: 'age',
       align: 'center',
+      render: (age) => <span>{age} years</span>,
     },
     {
       title: <span className="font-semibold">CO2 Absorption per Tree</span>,
@@ -192,18 +240,38 @@ export default function TreeMap() {
                 </div>
                 <Title level={3} className="m-0">My Forest</Title>
               </div>
+              {isConnected && (
+                <Text type="secondary">
+                  {forestData.length} tree{forestData.length !== 1 ? 's' : ''}
+                </Text>
+              )}
             </div>
           }
         >
-          <Table 
-            dataSource={forestData} 
-            columns={forestColumns} 
-            pagination={false}
-            className="custom-table"
-          />
+          {!isConnected ? (
+            <Empty 
+              description="Please connect your wallet to view your trees"
+              className="py-8"
+            />
+          ) : isLoadingIds || isLoadingTrees ? (
+            <div className="text-center py-12">
+              <Spin size="large" />
+              <p className="mt-4 text-gray-500">Loading your forest...</p>
+            </div>
+          ) : forestData.length === 0 ? (
+            <Empty 
+              description="You don't have any trees yet. Purchase your first tree to start your forest!"
+              className="py-8"
+            />
+          ) : (
+            <Table 
+              dataSource={forestData} 
+              columns={forestColumns} 
+              pagination={false}
+              className="custom-table"
+            />
+          )}
         </Card>
-
-        <div></div>
 
         {/* Carbon Credit NFT Section */}
         <Card 
@@ -217,16 +285,23 @@ export default function TreeMap() {
             </div>
           }
         >
-          <Table 
-            dataSource={nftData} 
-            columns={nftColumns} 
-            pagination={false}
-            className="custom-table"
-          />
+          {nftData.length === 0 ? (
+            <Empty 
+              description="No carbon credits minted yet"
+              className="py-8"
+            />
+          ) : (
+            <Table 
+              dataSource={nftData} 
+              columns={nftColumns} 
+              pagination={false}
+              className="custom-table"
+            />
+          )}
         </Card>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .custom-table .ant-table {
           background: transparent;
         }
