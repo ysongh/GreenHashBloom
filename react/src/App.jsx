@@ -1,7 +1,7 @@
 import { HashRouter, Route, Routes } from "react-router-dom";
 
 import Navbar from "./component/Navbar";
-import TreeMap from "./pages/TreeMap";
+import UserProfile from "./pages/UserProfile";
 import TreeShop from "./pages/TreeShop";
 
 function App() {
@@ -13,8 +13,8 @@ function App() {
           path="/treeshop"
           element={<TreeShop />} />
         <Route
-          path="/map"
-          element={<TreeMap />} />
+          path="/userprofile"
+          element={<UserProfile />} />
         <Route
           path="/"
           element={<>Test</>} />

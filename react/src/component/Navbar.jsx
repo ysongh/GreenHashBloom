@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, Button, Typography, Dropdown, Tag } from 'antd';
 import { UserOutlined, LogoutOutlined, SettingOutlined, WalletOutlined } from '@ant-design/icons';
 import { TreeDeciduous } from 'lucide-react';
@@ -7,6 +7,7 @@ import { useAccount, useDisconnect, useSwitchChain } from "wagmi";
 const { Text } = Typography;
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const { address, isConnected, chain } = useAccount();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
@@ -25,6 +26,7 @@ const Navbar = () => {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'Profile',
+      onClick: () => navigate("/userprofile")
     },
     {
       key: 'wallet',
@@ -94,13 +96,6 @@ const Navbar = () => {
               className="text-gray-700 text-base font-medium no-underline transition-all hover:text-green-600 relative group"
             >
               Buy Tree
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-500 transition-all group-hover:w-full"></span>
-            </Link>
-            <Link
-              to="/map" 
-              className="text-gray-700 text-base font-medium no-underline transition-all hover:text-green-600 relative group"
-            >
-              Map
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-500 transition-all group-hover:w-full"></span>
             </Link>
           </div>
