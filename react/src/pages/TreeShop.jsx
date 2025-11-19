@@ -12,6 +12,7 @@ const { Title, Text } = Typography;
 
 const TreeShop = () => {
   const { isConnected } = useAccount();
+  const [messageApi, contextHolder] = message.useMessage();
 
   const [basket, setBasket] = useState({
     redOak: 1,
@@ -48,6 +49,11 @@ const TreeShop = () => {
     error 
   } = useWriteContract();
 
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+
   const updateQuantity = (tree, value) => {
     if (value >= 0) {
       setBasket({ ...basket, [tree]: value });
@@ -60,6 +66,7 @@ const TreeShop = () => {
 
   const handlePurchase = async (treeData) => {
     if (!isConnected) {
+      messageApi.error('Please connect your wallet first');
       return;
     }
 
@@ -71,10 +78,26 @@ const TreeShop = () => {
         args: [treeData.key],
         value: parseEther(treeData.price),
       });
+      messageApi.loading('Transaction pending...', 0);
     } catch (err) {
       console.error('Purchase error:', err);
+      messageApi.error('Failed to purchase tree');
     }
   };
+
+  if (isConfirming) {
+    messageApi.loading('Confirming transaction...', 0);
+  }
+
+  if (isSuccess) {
+    messageApi.destroy();
+    messageApi.success('Tree purchased successfully! 🌳');
+  }
+
+  if (error) {
+    messageApi.destroy();
+    messageApi.error(`Error: ${error.message}`);
+  }
 
   const TreeCard = ({ treeKey, treeData }) => (
     <Card
@@ -245,6 +268,7 @@ const TreeShop = () => {
         marginBottom: 48,
         animation: 'slideIn 0.6s ease-out'
       }}>
+        {contextHolder}
         <Title level={1} style={{ 
           margin: 0, 
           marginBottom: 8,
