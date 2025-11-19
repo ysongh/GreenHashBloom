@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { Card, Table, Typography, Tag, Spin, Empty } from 'antd';
 import { TreeDeciduous, Leaf } from 'lucide-react';
-import { useAccount, useReadContract } from 'wagmi';
+import { useAccount, useConfig, useReadContract } from 'wagmi';
+import { readContract } from "@wagmi/core";
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -51,6 +52,8 @@ export default function TreeMap() {
   const [forestData, setForestData] = useState([]);
   const [isLoadingTrees, setIsLoadingTrees] = useState(false);
 
+  const config = useConfig();
+
   // Get user's tree IDs
   const { data: treeIds, isLoading: isLoadingIds, refetch } = useReadContract({
     address: CONTRACT_ADDRESS,
@@ -79,32 +82,25 @@ export default function TreeMap() {
       try {
         // Fetch details for each tree
         for (const treeId of treeIds) {
-          const response = await fetch('/api/read-contract', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              address: CONTRACT_ADDRESS,
-              abi: GreenHashBloomABI.abi,
-              functionName: 'getTreeDetails',
-              args: [treeId]
-            })
+          const response = await readContract(config, {
+             address: CONTRACT_ADDRESS,
+            abi: GreenHashBloomABI.abi,
+            functionName: "getTreeDetails",
+            args: [treeId]
           });
 
-          if (response.ok) {
-            const details = await response.json();
-            const [treeType, age, co2AbsorptionRate, harvestTime, grassGrowth] = details;
-            
-            trees.push({
-              key: treeId.toString(),
-              treeName: getTreeName(Number(treeType)),
-              treeId: Number(treeId),
-              age: Number(age),
-              co2Absorption: `${Number(co2AbsorptionRate) / 1000} ton/year`,
-              icon: getTreeIcon(Number(treeType)),
-              harvestTime: Number(harvestTime),
-              grassGrowth: Number(grassGrowth),
-            });
-          }
+          console.log(response);
+
+          trees.push({
+            key: treeId.toString(),
+            treeName: getTreeName(Number(response[0])),
+            treeId: Number(treeId),
+            age: Number(response[1]),
+            co2Absorption: `${Number(response[2]) / 10 ** 18} ton/year`,
+            icon: getTreeIcon(Number(response[0])),
+            harvestTime: Number(response[3]),
+            grassGrowth: Number(response[4]),
+          });
         }
 
         setForestData(trees);
