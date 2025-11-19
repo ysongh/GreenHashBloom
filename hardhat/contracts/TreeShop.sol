@@ -19,7 +19,6 @@ contract TreeShop is ERC721, Ownable {
     struct Tree {
         TreeType treeType;
         uint256 purchaseTimestamp;
-        uint256 age; // in years
         uint256 co2AbsorptionRate; // tons per year (in wei for precision)
         uint256 harvestTime; // years until harvest
         uint256 grassGrowth; // tons
@@ -82,7 +81,6 @@ contract TreeShop is ERC721, Ownable {
         trees[newTreeId] = Tree({
             treeType: treeType,
             purchaseTimestamp: block.timestamp,
-            age: 0,
             co2AbsorptionRate: co2Rate,
             harvestTime: harvestTime,
             grassGrowth: grassGrowth,
@@ -130,7 +128,6 @@ contract TreeShop is ERC721, Ownable {
             trees[newTreeId] = Tree({
                 treeType: treeTypes[i],
                 purchaseTimestamp: block.timestamp,
-                age: 0,
                 co2AbsorptionRate: co2Rate,
                 harvestTime: harvestTime,
                 grassGrowth: grassGrowth,
@@ -191,22 +188,7 @@ contract TreeShop is ERC721, Ownable {
         
         emit CarbonCreditRedeemed(msg.sender, creditId);
     }
-    
-    /**
-     * @dev Update tree age (should be called periodically, e.g., by an oracle or admin)
-     * @param treeId ID of the tree
-     */
-    function updateTreeAge(uint256 treeId) external onlyOwner {
-        require(trees[treeId].exists, "Tree does not exist");
-        
-        uint256 timeElapsed = block.timestamp - trees[treeId].purchaseTimestamp;
-        uint256 yearsElapsed = timeElapsed / 365 days;
-        
-        trees[treeId].age = yearsElapsed;
-        
-        emit TreeAgeUpdated(treeId, yearsElapsed);
-    }
-    
+
     /**
      * @dev Get all trees owned by a user
      * @param user Address of the user
@@ -229,7 +211,7 @@ contract TreeShop is ERC721, Ownable {
      */
     function getTreeDetails(uint256 treeId) external view returns (
         TreeType treeType,
-        uint256 age,
+        uint256 purchaseTimestamp,
         uint256 co2AbsorptionRate,
         uint256 harvestTime,
         uint256 grassGrowth,
@@ -239,7 +221,7 @@ contract TreeShop is ERC721, Ownable {
         Tree memory tree = trees[treeId];
         return (
             tree.treeType,
-            tree.age,
+            tree.purchaseTimestamp,
             tree.co2AbsorptionRate,
             tree.harvestTime,
             tree.grassGrowth,
