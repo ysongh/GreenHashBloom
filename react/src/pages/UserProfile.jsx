@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Typography, Tag, Spin, Empty } from 'antd';
-import { TreeDeciduous, Leaf } from 'lucide-react';
+import { Card, Table, Typography, Tag, Spin, Empty, Statistic } from 'antd';
+import { TreeDeciduous, Leaf, Clock } from 'lucide-react';
 import { useAccount, useConfig, useReadContract } from 'wagmi';
 import { readContract } from "@wagmi/core";
 
@@ -9,6 +9,7 @@ import GreenHashBloomABI from '../artifacts/contracts/TreeShop.sol/TreeShop.json
 import { CONTRACT_ADDRESS } from '../config';
 
 const { Title, Text } = Typography;
+const { Countdown } = Statistic;
 
 const getTreeName = (treeType) => {
   return treeType === 0 ? 'Red Oak' : 'Maple';
@@ -21,10 +22,18 @@ const getTreeIcon = (treeType) => {
 
 export default function UserProfile() {
   const { address, isConnected } = useAccount();
-  const [center] = useState([40.7128, -74.0060]);
-  const [zoom] = useState(13);
   const [forestData, setForestData] = useState([]);
   const [isLoadingTrees, setIsLoadingTrees] = useState(false);
+
+    
+  // Calculate end of year countdown
+  const getEndOfYear = () => {
+    const now = new Date();
+    const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+    return endOfYear.getTime();
+  };
+
+  const [deadline, setDeadline] = useState(getEndOfYear());
 
   const config = useConfig();
 
@@ -201,9 +210,29 @@ export default function UserProfile() {
               columns={forestColumns} 
               pagination={false}
               className="custom-table"
+              footer={() => 
+                <div className="max-w-xs flex items-center gap-3 bg-gradient-to-br from-orange-50 to-red-50 px-6 py-3 rounded-lg border-2 border-orange-200">
+                  <Clock size={24} className="text-orange-600" />
+                  <div className="flex flex-col items-center">
+                    <Text className="text-xs text-gray-600 mb-1">Time Until New Year</Text>
+                    <Text className="text-xs text-gray-600 mb-1">For credit tokens </Text>
+                    <Countdown 
+                      value={deadline} 
+                      format="D[d] H[h] m[m] s[s]"
+                      valueStyle={{ 
+                        fontSize: '18px', 
+                        fontWeight: 'bold',
+                        color: '#ea580c'
+                      }}
+                    />
+                  </div>
+                </div>
+              }
             />
           )}
         </Card>
+
+        <div></div>
 
         {/* Carbon Credit NFT Section */}
         <Card 

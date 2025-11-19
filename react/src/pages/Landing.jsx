@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { Button, Row, Col, Card, Typography } from 'antd';
-import { SmileOutlined, GlobalOutlined, FileTextOutlined, DollarOutlined, GiftOutlined, RightOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { SmileOutlined, GlobalOutlined, FileTextOutlined, DollarOutlined, GiftOutlined, RightOutlined } from '@ant-design/icons';
 import { TreeDeciduous, Sparkles } from 'lucide-react';
 
 const { Title, Text, Paragraph } = Typography;
