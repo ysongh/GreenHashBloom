@@ -19,7 +19,6 @@ const getTreeIcon = (treeType) => {
   return treeType === 0 ? '🍂' : '🍁';
 };
 
-
 export default function UserProfile() {
   const { address, isConnected } = useAccount();
   const [forestData, setForestData] = useState([]);
@@ -38,7 +37,7 @@ export default function UserProfile() {
   const config = useConfig();
 
   // Get user's tree IDs
-  const { data: treeIds, isLoading: isLoadingIds, refetch } = useReadContract({
+  const { data: treeIds = [], isLoading: isLoadingIds, refetch } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GreenHashBloomABI.abi,
     functionName: 'getUserTrees',
@@ -95,7 +94,7 @@ export default function UserProfile() {
     };
 
     fetchTreeDetails();
-  }, [treeIds]);
+  }, [isLoadingIds]);
 
   // Carbon Credit NFT Data (placeholder - implement based on your contract)
   const nftData = [
@@ -166,7 +165,7 @@ export default function UserProfile() {
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
-      <TreeMap />
+      <TreeMap forestData={forestData} />
 
       {/* My Forest and Carbon Credit Sections */}
       <div className="max-w-7xl mx-auto w-full p-6 space-y-6">

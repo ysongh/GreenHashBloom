@@ -29,15 +29,17 @@ function LocationMarker() {
   );
 }
 
-export default function TreeMap() {
-  const [center] = useState([40.7128, -74.0060]);
-  const [zoom] = useState(13);
+export default function TreeMap({ forestData }) {
+  const [center] = useState([42.3024, -107.6089]);
+  const [zoom] = useState(7);
 
   // Sample markers (you can make these dynamic based on tree locations if you add location data to your contract)
   const markers = [
-    { id: 1, position: [40.7589, -73.9851], popup: "Times Square" },
-    { id: 2, position: [40.7484, -73.9857], popup: "Empire State Building" },
-    { id: 3, position: [40.7614, -73.9776], popup: "Central Park" },
+    { id: 1, position: [42.1024, -107.2089], popup: "Tree #1" },
+    { id: 2, position: [42.4524, -106.5089], popup: "Tree #2" },
+    { id: 3, position: [42.7024, -106.9089], popup: "Tree #3" },
+    { id: 4, position: [42.4024, -105.6089], popup: "Tree #4" },
+    { id: 5, position: [42.4024, -107.6089], popup: "Tree #5" },
   ];
 
   return (
@@ -63,9 +65,9 @@ export default function TreeMap() {
           />
           
           {/* Predefined markers */}
-          {markers.map(marker => (
-            <Marker key={marker.id} position={marker.position}>
-              <Popup>{marker.popup}</Popup>
+          {forestData.map((forest, id) => (
+            <Marker key={id} position={markers[id].position}>
+              <Popup>{markers[id].popup}</Popup>
             </Marker>
           ))}
           
