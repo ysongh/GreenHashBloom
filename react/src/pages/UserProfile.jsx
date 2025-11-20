@@ -7,6 +7,7 @@ import { readContract } from "@wagmi/core";
 import TreeMap from '../component/TreeMap';
 import GreenHashBloomABI from '../artifacts/contracts/TreeShop.sol/TreeShop.json';
 import { CONTRACT_ADDRESS } from '../config';
+import { calculateTreeAge } from '../utils/format';
 
 const { Title, Text } = Typography;
 const { Countdown } = Statistic;
@@ -126,7 +127,7 @@ export default function UserProfile() {
       dataIndex: 'age',
       key: 'age',
       align: 'center',
-      render: (age) => <span>{age} years</span>,
+      render: (age) => <span>{calculateTreeAge(age)}</span>,
     },
     {
       title: <span className="font-semibold">CO2 Absorption per Tree</span>,
