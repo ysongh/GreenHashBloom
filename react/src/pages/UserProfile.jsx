@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Typography, Tag, Spin, Empty, Statistic } from 'antd';
+import { Card, Table, Typography, Tag, Spin, Empty, Statistic, message } from 'antd';
 import { TreeDeciduous, Leaf, Clock } from 'lucide-react';
-import { useAccount, useConfig, useReadContract } from 'wagmi';
+import { useAccount, useConfig, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { readContract } from "@wagmi/core";
 
 import TreeMap from '../component/TreeMap';
@@ -25,7 +25,8 @@ export default function UserProfile() {
   const [forestData, setForestData] = useState([]);
   const [isLoadingTrees, setIsLoadingTrees] = useState(false);
 
-    
+  const [messageApi, contextHolder] = message.useMessage();
+
   // Calculate end of year countdown
   const getEndOfYear = () => {
     const now = new Date();
@@ -48,11 +49,8 @@ export default function UserProfile() {
     }
   });
 
-  console.log(treeIds)
-
   // Fetch details for all trees
   useEffect(() => {
-    
     const fetchTreeDetails = async () => {
       if (!treeIds || treeIds.length === 0) {
         setForestData([]);
@@ -97,6 +95,37 @@ export default function UserProfile() {
     fetchTreeDetails();
   }, [isLoadingIds]);
 
+  const { 
+    data: hash, 
+    writeContract, 
+    isPending,
+    error 
+  } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  const handleMintCarbonCredit = async (data) => {
+    if (!isConnected) {
+      messageApi.error('Please connect your wallet first');
+      return;
+    }
+
+    try {
+      writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: GreenHashBloomABI.abi,
+        functionName: 'mintCarbonCredit',
+        args: [data.treeId, 2024],
+      });
+      messageApi.loading('Transaction pending...', 0);
+    } catch (err) {
+      console.error('Mint Carbon Credit error:', err);
+      messageApi.error('Failed to mint carbon credit');
+    }
+  };
+
   // Carbon Credit NFT Data (placeholder - implement based on your contract)
   const nftData = [
     // Add your NFT data here when you implement the carbon credit minting
@@ -135,6 +164,20 @@ export default function UserProfile() {
       key: 'co2Absorption',
       render: (text) => <Tag color="green" className="font-semibold">{text}</Tag>,
     },
+    {
+      title: <span className="font-semibold">Action</span>,
+      key: 'action',
+      align: 'center',
+      render: (_, record) => (
+        <button
+          onClick={() => handleMintCarbonCredit(record)}
+          className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
+        >
+          <Leaf size={16} />
+          Mint Carbon Credit
+        </button>
+      ),
+    },
   ];
 
   const nftColumns = [
@@ -164,8 +207,23 @@ export default function UserProfile() {
     },
   ];
 
+  if (isConfirming) {
+    messageApi.loading('Confirming transaction...', 0);
+  }
+
+  if (isSuccess) {
+    messageApi.destroy();
+    messageApi.success('Tree purchased successfully! 🌳');
+  }
+
+  if (error) {
+    messageApi.destroy();
+    messageApi.error(`Error: ${error.message}`);
+  }
+
   return (
     <div className="w-full min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+      {contextHolder}
       <TreeMap forestData={forestData} />
 
       {/* My Forest and Carbon Credit Sections */}
