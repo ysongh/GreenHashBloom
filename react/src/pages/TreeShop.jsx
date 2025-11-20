@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Button, InputNumber, Typography, Space, Divider, Row, Col, Badge, Tag, message } from 'antd';
 import { ShoppingCartOutlined, MinusOutlined, PlusOutlined, ClockCircleOutlined, CloudOutlined } from '@ant-design/icons';
 import { Leaf, Sprout } from 'lucide-react';
@@ -11,6 +12,7 @@ import { CONTRACT_ADDRESS } from '../config';
 const { Title, Text } = Typography;
 
 const TreeShop = () => {
+  const navigate = useNavigate();
   const { isConnected } = useAccount();
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -92,6 +94,7 @@ const TreeShop = () => {
   if (isSuccess) {
     messageApi.destroy();
     messageApi.success('Tree purchased successfully! 🌳');
+    navigate("/userprofile");
   }
 
   if (error) {
@@ -283,7 +286,6 @@ const TreeShop = () => {
         <Text style={{ fontSize: 16, color: '#666' }}>
           Choose premium trees and make a positive environmental impact
         </Text>
-        <button onClick={() => handlePurchase(trees.redOak)}>test</button>
       </div>
 
       <Row gutter={[24, 24]}>

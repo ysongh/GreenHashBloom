@@ -1,4 +1,5 @@
-import  { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button, Row, Col, Card, Typography } from 'antd';
 import { SmileOutlined, GlobalOutlined, FileTextOutlined, DollarOutlined, GiftOutlined, RightOutlined } from '@ant-design/icons';
 import { TreeDeciduous, Sparkles } from 'lucide-react';
@@ -6,6 +7,8 @@ import { TreeDeciduous, Sparkles } from 'lucide-react';
 const { Title, Text, Paragraph } = Typography;
 
 const Landing = () => {
+  const navigate = useNavigate();
+
   const [hoveredCard, setHoveredCard] = useState(null);
 
   const features = [
@@ -115,7 +118,8 @@ const Landing = () => {
                 </Paragraph>
                 
                 <div className="flex gap-4">
-                  <Button 
+                  <Button
+                    onClick={() => navigate("/treeshop")}
                     type="primary" 
                     size="large"
                     icon={<RightOutlined />}
@@ -275,7 +279,8 @@ const Landing = () => {
           </div>
           
           <div className="flex gap-6 justify-center flex-wrap animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <Button 
+            <Button
+              onClick={() => navigate("/treeshop")}
               size="large"
               icon={<TreeDeciduous size={20} />}
               className="bg-white text-green-600 hover:bg-gray-50 border-none h-16 px-12 text-lg font-bold shadow-2xl transition-all hover:-translate-y-1 hover:scale-105 rounded-xl"
