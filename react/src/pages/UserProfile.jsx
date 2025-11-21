@@ -7,7 +7,8 @@ import { readContract } from "@wagmi/core";
 
 import TreeMap from '../component/TreeMap';
 import GreenHashBloomABI from '../artifacts/contracts/TreeShop.sol/TreeShop.json';
-import { CONTRACT_ADDRESS } from '../config';
+import CarbonOffsetABI from '../artifacts/contracts/CarbonOffset.sol/CarbonOffset.json';
+import { CONTRACT_ADDRESS, ERC20_CONTRACT_ADDRESS } from '../config';
 import { calculateTreeAge } from '../utils/format';
 
 const { Title, Text } = Typography;
@@ -24,6 +25,7 @@ const getTreeIcon = (treeType) => {
 export default function UserProfile() {
   const navigate = useNavigate();
   const { address, isConnected } = useAccount();
+
   const [forestData, setForestData] = useState([]);
   const [carbonCreditData, setCarbonCreditData] = useState([]);
   const [isLoadingTrees, setIsLoadingTrees] = useState(false);
@@ -53,7 +55,7 @@ export default function UserProfile() {
     }
   });
 
-  const { data: carbonCreditsIds = [], isLoading: isLoadingCCIds } = useReadContract({
+  const { data: carbonCreditsIds = [], isLoading: isLoadingCCIds} = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GreenHashBloomABI.abi,
     functionName: 'getUserCarbonCredits',
@@ -62,6 +64,18 @@ export default function UserProfile() {
       enabled: !!address && isConnected,
     }
   });
+
+  const { data: carbonCreditToken = 0 } = useReadContract({
+    address: ERC20_CONTRACT_ADDRESS,
+    abi: CarbonOffsetABI.abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && isConnected,
+    }
+  });
+
+  console.log(carbonCreditToken);
 
   // Fetch details for all trees
   useEffect(() => {
@@ -224,7 +238,7 @@ export default function UserProfile() {
             className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
           >
             <Leaf size={16} />
-            Mint Carbon Credit
+            Collect Carbon Credit
           </button>
           <button
             onClick={() => navigate("/sendgift")}
@@ -358,7 +372,7 @@ export default function UserProfile() {
               <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-lg">
                 <Leaf size={24} color="white" />
               </div>
-              <Title level={3} className="m-0">Carbon Credit NFT</Title>
+              <Title level={3} className="m-0">Carbon Credit Token</Title>
               <button
                 onClick={() => navigate("/ccmarketplace")}
                 className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"

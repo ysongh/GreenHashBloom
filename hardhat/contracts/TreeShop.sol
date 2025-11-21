@@ -4,11 +4,15 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+import "./CarbonOffset.sol";
+
 /**
  * @title TreeShop
  * @dev Smart contract for purchasing trees and minting carbon credit NFTs
  */
 contract TreeShop is ERC721, Ownable {
+    CarbonOffset public immutable carbonOffset;
+
     uint256 public _treeIdCounter;
     uint256 public _carbonCreditIdCounter;
     
@@ -37,7 +41,7 @@ contract TreeShop is ERC721, Ownable {
     }
     
     // Tree prices (in wei)
-    uint256 public constant RED_OAK_PRICE = 1000000000000000000 ;
+    uint256 public constant RED_OAK_PRICE = 1000000000000000000;
     uint256 public constant MAPLE_PRICE = 2000000000000000000;
     
     // Tree properties
@@ -53,14 +57,17 @@ contract TreeShop is ERC721, Ownable {
     mapping(uint256 => CarbonCredit) public carbonCredits;
     mapping(address => uint256[]) public userTrees;
     mapping(address => uint256[]) public userCarbonCredits;
+    mapping(uint256 => mapping(uint256 => bool)) public treeCreditMinted; // treeId => year => minted
     
     // Events
     event TreePurchased(address indexed buyer, uint256 indexed treeId, TreeType treeType, uint256 price);
-    event CarbonCreditMinted(address indexed owner, uint256 indexed creditId, uint256 indexed treeId, uint256 year);
+    event CarbonCreditMinted(address indexed owner, uint256 indexed creditId, uint256 indexed treeId, uint256 year, uint256 tokenAmount);
     event CarbonCreditRedeemed(address indexed owner, uint256 indexed creditId);
     event TreeAgeUpdated(uint256 indexed treeId, uint256 newAge);
     
-    constructor() ERC721("TreeShop Tree", "TREE") Ownable(msg.sender) {}
+    constructor(address _carbonOffset) ERC721("TreeShop Tree", "TREE") Ownable(msg.sender) {
+        carbonOffset = CarbonOffset(_carbonOffset);
+    }
     
     /**
      * @dev Purchase a tree
@@ -149,7 +156,7 @@ contract TreeShop is ERC721, Ownable {
     }
     
     /**
-     * @dev Mint a carbon credit NFT for a tree (can be called annually)
+     * @dev Mint a carbon credit NFT for a tree and receive Carbon Offset tokens
      * @param treeId ID of the tree
      * @param year Year for which the carbon credit is being minted
      */
@@ -157,13 +164,16 @@ contract TreeShop is ERC721, Ownable {
         require(trees[treeId].exists, "Tree does not exist");
         require(trees[treeId].owner == msg.sender, "Not the tree owner");
         require(year >= 2020 && year <= 2100, "Invalid year");
+        //require(!treeCreditMinted[treeId][year], "Credit already minted for this year");
         
         _carbonCreditIdCounter++;
         uint256 newCreditId = _carbonCreditIdCounter;
         
+        uint256 co2Credit = trees[treeId].co2AbsorptionRate;
+        
         carbonCredits[newCreditId] = CarbonCredit({
             treeId: treeId,
-            co2Credit: trees[treeId].co2AbsorptionRate,
+            co2Credit: co2Credit,
             year: year,
             owner: msg.sender,
             exists: true,
@@ -171,12 +181,20 @@ contract TreeShop is ERC721, Ownable {
         });
         
         userCarbonCredits[msg.sender].push(newCreditId);
+        treeCreditMinted[treeId][year] = true;
         
-        emit CarbonCreditMinted(msg.sender, newCreditId, treeId, year);
+        // Mint Carbon Offset tokens to the user
+        // Convert co2Credit from wei (18 decimals) to token amount
+        // co2Credit is already in wei format (e.g., 0.25 * 10^18 for 0.25 tons)
+        // CarbonOffset.mint expects amount without decimals, so divide by 10^18
+        uint256 tokenAmount = co2Credit / 1e18;
+        carbonOffset.mint(msg.sender, tokenAmount);
+        
+        emit CarbonCreditMinted(msg.sender, newCreditId, treeId, year, tokenAmount);
     }
     
     /**
-     * @dev Redeem a carbon credit NFT
+     * @dev Redeem a carbon credit NFT and burn the Carbon Offset tokens
      * @param creditId ID of the carbon credit
      */
     function redeemCarbonCredit(uint256 creditId) external {
@@ -185,6 +203,10 @@ contract TreeShop is ERC721, Ownable {
         require(!carbonCredits[creditId].redeemed, "Credit already redeemed");
         
         carbonCredits[creditId].redeemed = true;
+        
+        // Burn the corresponding Carbon Offset tokens
+        uint256 tokenAmount = carbonCredits[creditId].co2Credit / 1e18;
+        carbonOffset.retire(msg.sender, tokenAmount);
         
         emit CarbonCreditRedeemed(msg.sender, creditId);
     }

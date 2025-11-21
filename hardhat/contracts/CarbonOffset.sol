@@ -2,17 +2,26 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract CarbonOffset is ERC20, Ownable {
-    constructor() ERC20("Carbon Offset", "COFF") Ownable(msg.sender) {}
-    
-    function mint(address to, uint256 amount) public onlyOwner {
-        _mint(to, amount * 10 ** decimals());  // e.g., amount=100 for 100 tons
+contract CarbonOffset is ERC20 {
+    address public owner;
+
+    constructor() ERC20("Carbon Offset", "COFF") {
+        owner = msg.sender;
+    }
+
+    function setNewOwner(address _newOwner) external {
+        require(msg.sender == owner, "Only owner");
+        owner = _newOwner;
     }
     
-    function retire(uint256 amount) public {
-        _burn(msg.sender, amount * 10 ** decimals());  // Retire by burning
-        // Emit event for HCS logging (integrate via HIP-478)
+    function mint(address to, uint256 amount) public {
+        require(msg.sender == owner, "Only owner");
+        _mint(to, amount * 10 ** decimals());
+    }
+    
+    function retire(address to, uint256 amount) public {
+        require(msg.sender == owner, "Only owner");
+        _burn(to, amount * 10 ** decimals());
     }
 }
