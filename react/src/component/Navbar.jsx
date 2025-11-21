@@ -111,9 +111,8 @@ const Navbar = () => {
             <div className="flex items-center gap-3 cursor-pointer px-4 py-2 rounded-lg hover:bg-gray-50 transition-all">
               <div className="flex flex-col items-end">
                 <div className="flex items-center gap-2">
-                  <Text className="font-semibold text-sm text-gray-800">My Account</Text>
                   {chain?.testnet && (
-                    <Tag color="orange" className="text-xs m-0">Testnet</Tag>
+                    <Tag color="orange" className="text-xs m-0">Hedera Testnet</Tag>
                   )}
                 </div>
                 <Text className="text-xs text-gray-500 font-mono">{formatAddress(address)}</Text>

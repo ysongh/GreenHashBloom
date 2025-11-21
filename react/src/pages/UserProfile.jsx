@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Table, Typography, Tag, Spin, Empty, Statistic, message, Space } from 'antd';
-import { TreeDeciduous, Leaf, Clock, Gift } from 'lucide-react';
+import { TreeDeciduous, Leaf, Clock, Gift, ShoppingBag } from 'lucide-react';
 import { useAccount, useConfig, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { readContract } from "@wagmi/core";
 
@@ -359,6 +359,13 @@ export default function UserProfile() {
                 <Leaf size={24} color="white" />
               </div>
               <Title level={3} className="m-0">Carbon Credit NFT</Title>
+              <button
+                onClick={() => navigate("/ccmarketplace")}
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
+              >
+                <ShoppingBag size={16} />
+                SELL Your Carbon Credit Token
+              </button>
             </div>
           }
         >
