@@ -25,7 +25,9 @@ export default function UserProfile() {
   const navigate = useNavigate();
   const { address, isConnected } = useAccount();
   const [forestData, setForestData] = useState([]);
+  const [carbonCreditData, setCarbonCreditData] = useState([]);
   const [isLoadingTrees, setIsLoadingTrees] = useState(false);
+  const [isLoadingCarbonCredit, setIsLoadingCarbonCredit] = useState(false);
 
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -41,10 +43,20 @@ export default function UserProfile() {
   const config = useConfig();
 
   // Get user's tree IDs
-  const { data: treeIds = [], isLoading: isLoadingIds, refetch } = useReadContract({
+  const { data: treeIds = [], isLoading: isLoadingIds } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GreenHashBloomABI.abi,
     functionName: 'getUserTrees',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && isConnected,
+    }
+  });
+
+  const { data: carbonCreditsIds = [], isLoading: isLoadingCCIds } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: GreenHashBloomABI.abi,
+    functionName: 'getUserCarbonCredits',
     args: address ? [address] : undefined,
     query: {
       enabled: !!address && isConnected,
@@ -66,13 +78,11 @@ export default function UserProfile() {
         // Fetch details for each tree
         for (const treeId of treeIds) {
           const response = await readContract(config, {
-             address: CONTRACT_ADDRESS,
+            address: CONTRACT_ADDRESS,
             abi: GreenHashBloomABI.abi,
             functionName: "getTreeDetails",
             args: [treeId]
           });
-
-          console.log(response);
 
           trees.push({
             key: treeId.toString(),
@@ -96,6 +106,48 @@ export default function UserProfile() {
 
     fetchTreeDetails();
   }, [isLoadingIds]);
+
+  useEffect(() => {
+    const fetchCarbonCreditsDetails = async () => {
+      if (!carbonCreditsIds || carbonCreditsIds.length === 0) {
+        setCarbonCreditData([]);
+        return;
+      }
+
+      setIsLoadingCarbonCredit(true);
+      const carbonCredits = [];
+
+      try {
+        // Fetch details for each tree
+        for (const carbonCreditsId of carbonCreditsIds) {
+          const response = await readContract(config, {
+            address: CONTRACT_ADDRESS,
+            abi: GreenHashBloomABI.abi,
+            functionName: "getCarbonCreditDetails",
+            args: [carbonCreditsId]
+          });
+
+          console.log(response);
+
+          carbonCredits.push({
+            key: carbonCreditsId.toString(),
+            treeId: Number(response[0]),
+            co2Credit: `${Number(response[1]) / 10 ** 18} ton/year`,
+            year: Number(response[2]),
+            isClaimed: response[4]
+          });
+        }
+
+        setCarbonCreditData(carbonCredits);
+      } catch (error) {
+        console.error('Error fetching tree details:', error);
+      } finally {
+        setIsLoadingCarbonCredit(false);
+      }
+    };
+
+    fetchCarbonCreditsDetails();
+  }, [isLoadingCCIds]);
 
   const { 
     data: hash, 
@@ -127,11 +179,6 @@ export default function UserProfile() {
       messageApi.error('Failed to mint carbon credit');
     }
   };
-
-  // Carbon Credit NFT Data (placeholder - implement based on your contract)
-  const nftData = [
-    // Add your NFT data here when you implement the carbon credit minting
-  ];
 
   const forestColumns = [
     {
@@ -194,8 +241,8 @@ export default function UserProfile() {
   const nftColumns = [
     {
       title: <span className="font-semibold">ID</span>,
-      dataIndex: 'id',
-      key: 'id',
+      dataIndex: 'key',
+      key: 'key',
       align: 'center',
     },
     {
@@ -315,14 +362,14 @@ export default function UserProfile() {
             </div>
           }
         >
-          {nftData.length === 0 ? (
+          {carbonCreditData.length === 0 ? (
             <Empty 
               description="No carbon credits minted yet"
               className="py-8"
             />
           ) : (
             <Table 
-              dataSource={nftData} 
+              dataSource={carbonCreditData} 
               columns={nftColumns} 
               pagination={false}
               className="custom-table"
