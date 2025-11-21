@@ -4,12 +4,16 @@ import Navbar from "./component/Navbar";
 import UserProfile from "./pages/UserProfile";
 import TreeShop from "./pages/TreeShop";
 import Landing from "./pages/Landing";
+import SendGift from "./pages/SendGift";
 
 function App() {
   return (
     <HashRouter>
       <Navbar />
       <Routes>
+        <Route
+          path="/sendgift"
+          element={<SendGift />} />
         <Route
           path="/treeshop"
           element={<TreeShop />} />

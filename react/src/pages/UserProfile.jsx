@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Typography, Tag, Spin, Empty, Statistic, message } from 'antd';
-import { TreeDeciduous, Leaf, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Card, Table, Typography, Tag, Spin, Empty, Statistic, message, Space } from 'antd';
+import { TreeDeciduous, Leaf, Clock, Gift } from 'lucide-react';
 import { useAccount, useConfig, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { readContract } from "@wagmi/core";
 
@@ -21,6 +22,7 @@ const getTreeIcon = (treeType) => {
 };
 
 export default function UserProfile() {
+  const navigate = useNavigate();
   const { address, isConnected } = useAccount();
   const [forestData, setForestData] = useState([]);
   const [isLoadingTrees, setIsLoadingTrees] = useState(false);
@@ -169,13 +171,22 @@ export default function UserProfile() {
       key: 'action',
       align: 'center',
       render: (_, record) => (
-        <button
-          onClick={() => handleMintCarbonCredit(record)}
-          className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
-        >
-          <Leaf size={16} />
-          Mint Carbon Credit
-        </button>
+        <Space size="small" className="flex justify-center">
+          <button
+            onClick={() => handleMintCarbonCredit(record)}
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
+          >
+            <Leaf size={16} />
+            Mint Carbon Credit
+          </button>
+          <button
+            onClick={() => navigate("/sendgift")}
+            className="bg-gradient-to-r from-pink-500 to-rose-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-pink-600 hover:to-rose-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+          >
+            <Gift size={16} />
+            Send as Gift
+          </button>
+        </Space>
       ),
     },
   ];
